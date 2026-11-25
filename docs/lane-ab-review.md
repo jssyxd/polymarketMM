@@ -128,3 +128,11 @@
 4. 重新跑 24 小时纸面。验收仍是单腿占比 < 50%、配对率 > 70%、滚动净捕获 > 0、现金不低于 20。
 5. Lane B 不再调 maker。只有拿到 Chainlink key，才开 Lane T 的 T−30s 方向实验。
 6. ML 只做数据采集和离线基线，不进入在线报价。
+
+## 2026-11-25 更新：VPS 已重装
+
+- 主机 `vps-evoxt` 155.254.60.38 已重装，主机密钥和 root 密码都已重置。
+- VibeShell 指纹已更新为 `SHA256:UVV1/6WK0+EOMru68eFX27727GHJ1LDG3Cj3l5ifUNk`。
+- 旧的密码认证临时 server 已删除。当前 VibeShell 使用本地 `~/.ssh/id_ed25519`，公钥已安装到新 VPS 的 `/root/.ssh/authorized_keys`。
+- `pmm-mm.service` 现在是 `disabled` 且 inactive。`/opt/pmm`、`/var/lib/pmm`、`/etc/pmm-mm` 仍在；merge、harvest、redeem、rescue、repair、alerts timer 仍 enabled。
+- 上一节记录的 27.70 权益、13 个仓位来自重装前的旧主机，不应再当作当前余额。恢复交易前重新读余额和 journal。
