@@ -164,3 +164,40 @@ ML 继续推迟。0 fill 没有标签，先有 500 笔有标签成交和 quote-t
 - 纸面 best bid：`RunnerConfig.paper_best_bid` + `--paper-best-bid`。已部署。
 - 测试：本地和 VPS 都是 **277 passed**。
 - 仍缺：`repair` 只在 `held_cost + ask <= 1` 时补腿，不满足时没有强制亏损平仓；现金约 1.17 pUSD，低于 25 pUSD 门槛。
+
+## best bid ±1 tick 5 分钟试验
+
+市场：`0x44317caf...`，FAA ground stop 确认市场，mid 约 0.30，spread 约 1.9c，venue min 5，reward min 20。
+三个并行的 5 分钟纸面单元，参数相同，只改 best bid 偏移：
+
+| 偏移 | 报价 | cycles | order_intent | fills |
+|---|---:|---:|---:|---:|
+| -1 tick | Up 0.284 / Down 0.672 | 57 | 2 | 0 |
+| 0 tick | Up 0.294 / Down 0.682 | 57 | 2 | 0 |
+| +1 tick | 无 | 60 | 0 | 0 |
+
+`+1 tick` 没有 intent，原因是双腿 best bid 各加 1 tick 后，
+`up_bid + down_bid > 1 - tick_size`，配对不变量拒绝了报价。要测 +1，需要 spread ≥3c 的市场。
+
+三个单元都是 0 fill。`-1` 和 `0` 有机会挂单，但 5 分钟内没有 taker SELL 打到这两个买价；
+`+1` 被配对不变量挡掉。
+
+## 60 秒强制退出代码
+
+新增：
+
+- `src/pmm/execution/exit.py`：`plan_exits()`，单腿超过 `max_age_seconds` 且 `held_cost + ask > 1` 时，计划按 best bid 卖出。
+- `tools/exit_stale.py`：dry-run 默认；实盘卖出需要 `POLY_EXIT=1`。
+- 位置字段适配实际 Data API：`token_id`、`condition_id`、`current_size`、`avg_price`、`current_price`。
+- 入场时间从 journal fills 的 `token_id` / `ts` 读取；实际 API positions 没有 `first_entry_at`。
+- 测试：本地和 VPS **284 passed**。
+
+dry-run 当前返回 `[]`。原因不是代码没跑，而是旧仓位没有对应的 journal 入场时间，
+或者同一 condition 已经有两个 token，被判定为已配对。新成交会写 journal，之后才会进入 60 秒计时。
+
+## 当前结论
+
+- 1c、best bid、best bid -1 tick 全部 0 fill；best bid +1 tick 被配对不变量拒绝。
+- 队列和缺少打到报价的卖单仍是主因。
+- 60 秒强制退出代码已实现，但未启用 `POLY_EXIT=1`，也没有实盘卖出。
+- 现金约 1.17 pUSD，低于 25 pUSD 门槛，不能恢复实盘。
