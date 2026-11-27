@@ -160,6 +160,8 @@ bid_NO  = (1 − p) − δ
 **Lane B（后做，且先做研究）：crypto up/down 公平价做市。**
 用 Chainlink TWAP 做公允价，GLFT 改写成概率空间 + 显式到期项，配对下单。收益来源今天只有价差和配对利润，没有奖励分配（见 1.2），而且要跟能直接读 TWAP 的套利者竞争。真正的门槛是那个拿不到的 price to beat 和申请下来的 Chainlink key。
 
+btc5m 分支的执行级方案见 `docs/btc5m-plan.md`（2026-11-24）：当前 btc5m 挂单奖励为 0，只能做“延迟保护的配对 maker + maker 返点补贴”，且 250ms 撤单竞速必须先实测。
+
 我的判断：**先 Lane A，用 Lane A 的实测数据决定要不要投入 Lane B。** 如果在真实盘口上，配对收益减去单边损失为正，那这套系统在 up/down 上的期望同样为正，因为 up/down 只是奖励池为空的 Lane A 市场。如果为负，加多少数学都救不回来。
 
 ---
