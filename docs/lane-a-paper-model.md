@@ -124,3 +124,43 @@ if ask <= intent.price:
 ## 第 5 项
 
 ML 继续推迟。0 fill 没有标签，先有 500 笔有标签成交和 quote-time 盘口特征，再谈 spread 模型。
+
+## best bid 15 分钟重跑
+
+为了让挂单进入队首，增加了纸面专用 `--paper-best-bid`，把报价从 `mid−1c` 改到该腿的 best bid。
+这只用于测试队列，不改变实盘报价。
+
+| 项目 | 值 |
+|---|---:|
+| 单元 | `pmm-paper15.service` |
+| 市场 | `0xbbf57093...`，76ers vs Pacers O/U 231.5 |
+| 报价 | Up 0.46，Down 0.53，各 20 股 |
+| cycles | 170 |
+| order_intent | 2 |
+| fills | **0** |
+| cancels | 0 |
+| errors | 0 |
+
+真实盘口校验：
+
+| 腿 | 报价 | 前方队列 | 最近成交方向 |
+|---|---:|---:|---|
+| Up | 0.46 | 4,293.37 | BUY |
+| Down | 0.53 | 394.55 | BUY |
+
+最近成交只有 BUY，没有 taker SELL 打到买价；即使有，Up 前方 4,293 股也需要大扫单。
+
+## 结论
+
+- 1c 报价 15 分钟 0 fill。
+- best bid 报价 15 分钟 0 fill。
+- 模型在真实 0.61 盘口有成交校验，说明问题不是成交流没接上。
+- 当前 20 股 maker 的主要限制是队列和当前没有打到报价的卖单。按计划第 3 条，**不恢复实盘**。
+
+## 第 4 项代码进度
+
+- 硬熔断：`pmm-alerts` 命中 alert 时调用 `disable_quoting()`，写 `quoting_enabled=false`。已部署。
+- 单腿限时：`repair.DEFAULT_MAX_AGE_SECONDS=60`，`pmm-repair.timer` 改为每分钟。已部署。
+- 纸面 best bid：`RunnerConfig.paper_best_bid` + `--paper-best-bid`。已部署。
+- 测试：本地和 VPS 都是 **277 passed**。
+- 仍缺：`repair` 只在 `held_cost + ask <= 1` 时补腿，不满足时没有强制亏损平仓；现金约 1.17 pUSD，低于 25 pUSD 门槛。
