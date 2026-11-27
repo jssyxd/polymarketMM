@@ -1,5 +1,8 @@
 # Lane A 24 小时纸面与当前账单
 
+> 2026-11-27 更新：纸面成交模型已修复为“真实成交流 + 队列位置”，见 `docs/lane-a-paper-model.md`。
+> 30 分钟活跃市场重跑 158 轮、2 条 intent、0 fill；模型能用真实成交触发，但 3c 报价没有遇到足够的 taker 卖量。
+
 日期：2026-11-27
 范围：VPS `vps-evoxt` 的 `pmm-paper24.service`，2026-11-25 05:24:56Z 至 2026-11-26 05:24:56Z。
 数据：`/var/lib/pmm/paper24/journal/`，本地 btc5m 录制，VPS 当前账户。
